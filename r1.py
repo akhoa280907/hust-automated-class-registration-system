@@ -1,3 +1,4 @@
+#Batch: Đăng kí hết tất cả các lớp rồi mới gửi đăng kí và huỷ các lớp hết chỗ.
 from pathlib import Path
 import re
 

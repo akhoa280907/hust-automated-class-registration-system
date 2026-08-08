@@ -1,3 +1,4 @@
+#Sequential: Đăng kí từng lớp rồi gửi đăng kí từng lớp, huỷ các lớp hết chỗ sau khi đăng kí (có 2 mode)
 from pathlib import Path
 import re
 

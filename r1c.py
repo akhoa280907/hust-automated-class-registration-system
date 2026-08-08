@@ -1,5 +1,7 @@
+#Batch-c: Đăng kí hết tất cả các lớp rồi mới gửi đăng kí và huỷ các lớp hết chỗ.
 from pathlib import Path
 import re
+import time
 
 from playwright.sync_api import (
     sync_playwright,
@@ -13,7 +15,204 @@ from config import (
     DEFAULT_TIMEOUT,
     SEARCH_TIMEOUT,
     CONFIRM_CANCEL,
+    RETRY_LOOP,
+    LOOP_LIMIT,
+    RETRY_DELAY,
+    SHOW_SUMMARY,
+    SAVE_LOG,
+    LOG_FILE,
+    RETRY_FAILED_ONLY,
 )
+
+
+
+# =========================================================
+# LOG + KẾT QUẢ
+# =========================================================
+
+def save_log(message):
+    if not SAVE_LOG:
+        return
+
+    from datetime import datetime
+
+    timestamp = datetime.now().strftime(
+        "%Y-%m-%d %H:%M:%S"
+    )
+
+    with open(
+        LOG_FILE,
+        "a",
+        encoding="utf-8"
+    ) as log_file:
+
+        log_file.write(
+            f"[{timestamp}] {message}\n"
+        )
+
+
+def start_log_session(script_name):
+    if not SAVE_LOG:
+        return
+
+    save_log(
+        "=" * 50
+    )
+    save_log(
+        f"START {script_name}"
+    )
+
+
+def print_final_summary(
+    attempts,
+    last_status,
+    stopped_by_limit=False
+):
+
+    if not SHOW_SUMMARY:
+        return
+
+    print()
+    print(
+        "======================================"
+    )
+    print(
+        "TÓM TẮT KẾT QUẢ CUỐI"
+    )
+    print(
+        "======================================"
+    )
+
+    success_ids = []
+    failed_ids = []
+    unknown_ids = []
+
+    for class_id in CLASS_IDS:
+
+        status = last_status.get(
+            class_id,
+            "CHƯA XÁC ĐỊNH"
+        )
+
+        attempt_count = attempts.get(
+            class_id,
+            0
+        )
+
+        print(
+            f"{class_id}: {status} "
+            f"(đã thử {attempt_count} lần)"
+        )
+
+        if status == "THÀNH CÔNG":
+            success_ids.append(
+                class_id
+            )
+
+        elif status in (
+            "HẾT CHỖ",
+            "KHÔNG THÀNH CÔNG"
+        ):
+            failed_ids.append(
+                class_id
+            )
+
+        else:
+            unknown_ids.append(
+                class_id
+            )
+
+    print()
+
+    if success_ids:
+        print(
+            "Đăng ký thành công:"
+        )
+
+        for class_id in success_ids:
+            print(
+                f"    - {class_id}"
+            )
+
+    if failed_ids:
+        print(
+            "Chưa đăng ký thành công:"
+        )
+
+        for class_id in failed_ids:
+            print(
+                f"    - {class_id}"
+            )
+
+    if unknown_ids:
+        print(
+            "Trạng thái chưa xác định:"
+        )
+
+        for class_id in unknown_ids:
+            print(
+                f"    - {class_id}"
+            )
+
+    if stopped_by_limit:
+        print()
+        print(
+            f"Đã đạt LOOP_LIMIT = {LOOP_LIMIT}."
+        )
+
+    save_log(
+        "FINAL SUMMARY: "
+        + ", ".join(
+            f"{class_id}={last_status.get(class_id, 'CHƯA XÁC ĐỊNH')}"
+            for class_id in CLASS_IDS
+        )
+    )
+
+
+def get_retry_ids_from_statuses(
+    class_ids,
+    statuses,
+    cancelled_ids
+):
+
+    if not RETRY_FAILED_ONLY:
+
+        return list(
+            dict.fromkeys(
+                cancelled_ids
+            )
+        )
+
+    retry_ids = []
+
+    for class_id in class_ids:
+
+        status = statuses.get(
+            class_id,
+            "CHƯA XÁC ĐỊNH"
+        )
+
+        if status == "HẾT CHỖ":
+
+            # Chỉ retry HẾT CHỖ khi thao tác hủy
+            # của lớp đó đã được thực hiện thành công.
+            if class_id in cancelled_ids:
+                retry_ids.append(
+                    class_id
+                )
+
+        elif status == "KHÔNG THÀNH CÔNG":
+
+            retry_ids.append(
+                class_id
+            )
+
+    return list(
+        dict.fromkeys(
+            retry_ids
+        )
+    )
+
 
 
 # =========================================================
@@ -244,6 +443,42 @@ def move_to_registration_list(page):
 
     print(
         "[10] Đã chuyển các lớp sang danh sách đăng ký."
+    )
+
+
+def back_to_step_1(page):
+
+    print()
+    print(
+        "Đang quay lại Bước 1: Chọn lớp..."
+    )
+
+    step_1_tab = page.get_by_role(
+        "tab",
+        name=re.compile(r"Bước 1:\s*Chọn lớp")
+    )
+
+    expect(step_1_tab).to_be_visible(
+        timeout=30000
+    )
+
+    step_1_tab.click()
+
+    search_box = page.get_by_role(
+        "searchbox",
+        name="Mã lớp, mã học phần"
+    )
+
+    expect(search_box).to_be_visible(
+        timeout=30000
+    )
+
+    wait_hust_ready(
+        page
+    )
+
+    print(
+        "Đã quay lại Bước 1."
     )
 
 
@@ -484,6 +719,7 @@ def f(page):
     )
 
 
+
 def read_registration_status(page, class_id):
 
     rows = (
@@ -510,7 +746,7 @@ def read_registration_status(page, class_id):
 
             text = row.inner_text()
 
-            # Kiểm tra chuỗi âm trước chuỗi dương
+            # Phải kiểm tra chuỗi âm trước,
             # vì "Không thành công" có chứa "Thành công".
             if "Không thành công" in text:
                 return "KHÔNG THÀNH CÔNG"
@@ -531,26 +767,37 @@ def read_registration_status(page, class_id):
         return "KHÔNG ĐỌC ĐƯỢC"
 
 
-def print_registration_statuses(page):
+def collect_statuses(page, class_ids):
 
-    print()
-    print("======================================")
-    print("TRẠNG THÁI CÁC MÃ LỚP")
-    print("======================================")
+    wait_hust_ready(
+        page
+    )
 
-    for class_id in CLASS_IDS:
+    statuses = {}
 
-        status = read_registration_status(
-            page,
-            class_id
+    for class_id in class_ids:
+
+        statuses[class_id] = (
+            read_registration_status(
+                page,
+                class_id
+            )
         )
 
-        print(
-            f"{class_id}: {status}"
+        save_log(
+            f"STATUS {class_id}: "
+            f"{statuses[class_id]}"
         )
+
+    return statuses
+
 
 
 def cancel_full_classes(page, class_ids):
+
+    wait_hust_ready(
+        page
+    )
 
     print()
     print("======================================")
@@ -724,8 +971,32 @@ def main():
     if not CLASS_IDS:
 
         print(
-            "ERROR: CLASS_IDS trong "
-            "hust_config_v5.py đang trống."
+            "ERROR: CLASS_IDS trong config.py đang trống."
+        )
+
+        return
+
+    if RETRY_LOOP and not CONFIRM_CANCEL:
+
+        print(
+            "ERROR: RETRY_LOOP = True chỉ hoạt động "
+            "khi CONFIRM_CANCEL = True."
+        )
+
+        return
+
+    if not isinstance(LOOP_LIMIT, int) or LOOP_LIMIT < 1:
+
+        print(
+            "ERROR: LOOP_LIMIT phải là số nguyên >= 1."
+        )
+
+        return
+
+    if RETRY_DELAY < 0:
+
+        print(
+            "ERROR: RETRY_DELAY phải >= 0."
         )
 
         return
@@ -747,6 +1018,10 @@ def main():
         )
 
         try:
+
+            start_log_session(
+                "batch.py"
+            )
 
             # =================================================
             # MỞ TRANG
@@ -781,103 +1056,167 @@ def main():
             )
 
             # =================================================
-            # CHỌN + XÁC NHẬN TỪNG MÃ
+            # VÒNG ĐĂNG KÝ
             # =================================================
 
-            total = len(
-                CLASS_IDS
+            pending_ids = list(
+                dict.fromkeys(
+                    CLASS_IDS
+                )
             )
 
-            for index, class_id in enumerate(
-                CLASS_IDS,
-                start=1
-            ):
+            attempts = {
+                class_id: 0
+                for class_id in CLASS_IDS
+            }
+
+            last_status = {
+                class_id: "CHƯA XÁC ĐỊNH"
+                for class_id in CLASS_IDS
+            }
+
+            round_number = 1
+            stopped_by_limit = False
+
+            while pending_ids:
+
+                if RETRY_LOOP and round_number > LOOP_LIMIT:
+
+                    stopped_by_limit = True
+                    break
+
+                current_ids = list(
+                    pending_ids
+                )
+
+                save_log(
+                    f"BATCH ROUND {round_number}: "
+                    + ", ".join(current_ids)
+                )
 
                 print()
                 print(
-                    "======================================"
+                    "######################################"
                 )
                 print(
-                    f"BATCH {index}/{total}: {class_id}"
+                    f"BATCH ROUND {round_number}"
                 )
                 print(
-                    "======================================"
+                    "######################################"
                 )
 
-                select_class_and_confirm(
-                    page,
-                    class_id
+                total = len(
+                    current_ids
                 )
 
-            # =================================================
-            # CHỌN XONG HẾT
-            # -> arrow-right
-            # =================================================
+                for index, class_id in enumerate(
+                    current_ids,
+                    start=1
+                ):
 
-            move_to_registration_list(
-                page
-            )
-
-            # =================================================
-            # GỬI ĐĂNG KÝ 1 LẦN
-            #
-            # f() luôn thực hiện đủ 3 bước xác nhận.
-            # =================================================
-
-            f(
-                page
-            )
-
-            # =================================================
-            # ĐỌC TRẠNG THÁI
-            # =================================================
-
-            print_registration_statuses(
-                page
-            )
-
-            # =================================================
-            # CHỈ SAU KHI ĐĂNG KÝ XONG TOÀN BỘ
-            # MỚI HỦY CÁC LỚP HẾT CHỖ.
-            # =================================================
-
-            cancelled_ids = cancel_full_classes(
-                page,
-                CLASS_IDS
-            )
-
-            # =================================================
-            # CONFIRM_CANCEL chỉ điều khiển
-            # có gọi f() cho LẦN GỬI HỦY hay không.
-            # =================================================
-
-            if cancelled_ids:
-
-                if CONFIRM_CANCEL:
+                    attempts[class_id] += 1
 
                     print()
                     print(
-                        "CONFIRM_CANCEL = True"
+                        f"BATCH {index}/{total}: {class_id}"
                     )
 
-                    print(
-                        "Gọi f() để gửi thay đổi hủy..."
+                    save_log(
+                        f"ATTEMPT {class_id}: "
+                        f"{attempts[class_id]}"
                     )
+
+                    select_class_and_confirm(
+                        page,
+                        class_id
+                    )
+
+                move_to_registration_list(
+                    page
+                )
+
+                f(
+                    page
+                )
+
+                wait_hust_ready(
+                    page
+                )
+
+                # Đọc trạng thái TRƯỚC khi hủy.
+                statuses = collect_statuses(
+                    page,
+                    current_ids
+                )
+
+                for class_id, status in statuses.items():
+                    last_status[class_id] = status
+
+                # Chỉ HẾT CHỖ mới có thao tác Hủy.
+                cancelled_ids = cancel_full_classes(
+                    page,
+                    current_ids
+                )
+
+                if cancelled_ids and CONFIRM_CANCEL:
 
                     f(
                         page
                     )
 
-                else:
-
-                    print()
-                    print(
-                        "CONFIRM_CANCEL = False"
+                    wait_hust_ready(
+                        page
                     )
 
-                    print(
-                        "Không gọi f() cho phần hủy."
+                    save_log(
+                        "CANCEL CONFIRMED: "
+                        + ", ".join(cancelled_ids)
                     )
+
+                if not RETRY_LOOP:
+                    break
+
+                pending_ids = get_retry_ids_from_statuses(
+                    current_ids,
+                    statuses,
+                    cancelled_ids
+                )
+
+                if not pending_ids:
+                    break
+
+                if round_number >= LOOP_LIMIT:
+
+                    stopped_by_limit = True
+                    break
+
+                print()
+                print(
+                    f"Chờ {RETRY_DELAY} giây "
+                    "trước vòng tiếp theo..."
+                )
+
+                save_log(
+                    f"RETRY NEXT: {pending_ids}; "
+                    f"delay={RETRY_DELAY}s"
+                )
+
+                if RETRY_DELAY > 0:
+                    time.sleep(
+                        RETRY_DELAY
+                    )
+
+                back_to_step_1(
+                    page
+                )
+
+                round_number += 1
+
+            print_final_summary(
+                attempts,
+                last_status,
+                stopped_by_limit=stopped_by_limit
+            )
 
         except PlaywrightTimeoutError as error:
 
@@ -887,6 +1226,9 @@ def main():
             print("======================================")
 
             print(error)
+            save_log(
+                f"PLAYWRIGHT TIMEOUT: {error}"
+            )
 
             try:
 
@@ -911,6 +1253,9 @@ def main():
             print("======================================")
 
             print(error)
+            save_log(
+                f"ERROR: {error}"
+            )
 
             try:
 

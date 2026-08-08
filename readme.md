@@ -45,6 +45,8 @@ python r2.c (Mỗi lần đăng kí mã lớp là 1 lần gửi đăng kí)
 
 python r2c.py (Mỗi lần đăng kí mã lớp là 1 lần gửi đăng kí và huỷ hết lớp hết chỗ sau khi hoàn thành gửi đăng kí toàn bộ)
 
+python registerclone.py (Mở nhiều tab cùng lúc và chạy song song để đăng kí tất cả mã lớp cùng lúc)
+
 ------------
 
 Tùy chọn: dùng virtual environment

@@ -1,3 +1,4 @@
+#Sequential-c: Đăng kí từng lớp rồi gửi đăng kí từng lớp, huỷ các lớp hết chỗ sau khi đăng kí (có 2 mode)
 from pathlib import Path
 import re
 
@@ -13,22 +14,44 @@ from config import (
     DEFAULT_TIMEOUT,
     SEARCH_TIMEOUT,
     CONFIRM_CANCEL,
+    CANCEL_MODE,
 )
 
 
 # =========================================================
 # SEQUENTIAL
 #
-# mã 1 -> chọn -> f()
-# mã 2 -> chọn -> f()
-# ...
-# mã cuối -> chọn -> f()
+# CANCEL_MODE = 1:
+#   đăng ký lớp nào xong -> nếu Hết chỗ -> hủy ngay
+#   -> gửi thay đổi hủy -> rồi mới sang lớp tiếp theo.
 #
-# Sau lần gửi cuối cùng mới:
-# -> hủy tất cả lớp Hết chỗ
-# -> nếu CONFIRM_CANCEL=True
-#    gọi f() để gửi thay đổi hủy.
+# CANCEL_MODE = 2:
+#   đăng ký xong toàn bộ CLASS_IDS
+#   -> sau đó mới hủy tất cả lớp Hết chỗ.
+#
+# CONFIRM_CANCEL:
+#   quyết định có gọi f() để gửi thay đổi hủy hay không.
+#
+# LƯU Ý:
+#   CANCEL_MODE = 1 yêu cầu CONFIRM_CANCEL = True.
 # =========================================================
+
+def wait_hust_ready(page):
+    loading = (
+        page
+        .locator("div")
+        .filter(
+            has_text=re.compile(
+                r"^Đang tải\.\.\.$"
+            )
+        )
+        .nth(1)
+    )
+
+    expect(loading).to_be_hidden(
+        timeout=SEARCH_TIMEOUT
+    )
+
 
 def get_class_row(page, class_id):
     return (
@@ -90,6 +113,19 @@ def search_class(page, class_id):
     )
 
     print(f"[2] Đã nhập mã lớp {class_id}")
+
+    # Chờ HUST load xong trước khi bấm Search
+    wait_hust_ready(
+        page
+    )
+
+    expect(search_button).to_be_visible(
+        timeout=SEARCH_TIMEOUT
+    )
+
+    expect(search_button).to_be_enabled(
+        timeout=SEARCH_TIMEOUT
+    )
 
     # Bấm Search
     search_button.click()
@@ -226,6 +262,10 @@ def back_to_step_1(page):
 
     expect(search_box).to_be_visible(
         timeout=30000
+    )
+
+    wait_hust_ready(
+        page
     )
 
     print(
@@ -472,6 +512,10 @@ def f(page):
 
 def cancel_full_classes(page, class_ids):
 
+    wait_hust_ready(
+        page
+    )
+
     print()
     print("======================================")
     print("HỦY CÁC LỚP HẾT CHỖ")
@@ -644,8 +688,27 @@ def main():
     if not CLASS_IDS:
 
         print(
-            "ERROR: CLASS_IDS trong "
-            "hust_config_v5.py đang trống."
+            "ERROR: CLASS_IDS trong config.py đang trống."
+        )
+
+        return
+
+    if CANCEL_MODE not in (1, 2):
+
+        print(
+            "ERROR: CANCEL_MODE chỉ được phép là 1 hoặc 2."
+        )
+
+        return
+
+    if CANCEL_MODE == 1 and not CONFIRM_CANCEL:
+
+        print(
+            "ERROR: CANCEL_MODE = 1 cần CONFIRM_CANCEL = True."
+        )
+
+        print(
+            "Nếu muốn CONFIRM_CANCEL = False, hãy dùng CANCEL_MODE = 2."
         )
 
         return
@@ -690,6 +753,10 @@ def main():
                 timeout=30000
             )
 
+            wait_hust_ready(
+                page
+            )
+
             print(
                 "[0] Trang đăng ký đã sẵn sàng."
             )
@@ -719,7 +786,7 @@ def main():
                 )
 
                 # =============================================
-                # CHỌN LỚP
+                # CHỌN + GỬI ĐĂNG KÝ LỚP NÀY
                 # =============================================
 
                 select_class(
@@ -727,19 +794,42 @@ def main():
                     class_id
                 )
 
-                # =============================================
-                # GỬI ĐĂNG KÝ LỚP NÀY
-                # =============================================
-
                 f(
                     page
                 )
 
+                wait_hust_ready(
+                    page
+                )
+
                 # =============================================
-                # Còn lớp tiếp theo:
-                # quay về Bước 1.
+                # CANCEL_MODE = 1
                 #
-                # KHÔNG HỦY Ở ĐÂY.
+                # Lớp nào vừa đăng ký xong mà Hết chỗ
+                # -> hủy ngay
+                # -> gửi thay đổi hủy ngay
+                # -> rồi mới sang lớp tiếp theo.
+                # =============================================
+
+                if CANCEL_MODE == 1:
+
+                    cancelled_ids = cancel_full_classes(
+                        page,
+                        [class_id]
+                    )
+
+                    if cancelled_ids:
+
+                        f(
+                            page
+                        )
+
+                        wait_hust_ready(
+                            page
+                        )
+
+                # =============================================
+                # Còn lớp tiếp theo -> quay lại Bước 1
                 # =============================================
 
                 if index < total:
@@ -749,53 +839,50 @@ def main():
                     )
 
             # =================================================
-            # ĐÃ GỬI XONG LỚP CUỐI.
+            # CANCEL_MODE = 2
             #
-            # BÂY GIỜ MỚI HỦY TẤT CẢ LỚP HẾT CHỖ.
+            # Đăng ký xong toàn bộ CLASS_IDS
+            # rồi mới hủy tất cả lớp Hết chỗ.
             # =================================================
 
-            cancelled_ids = cancel_full_classes(
-                page,
-                CLASS_IDS
-            )
+            if CANCEL_MODE == 2:
 
-            # =================================================
-            # Nếu có lớp đã hủy:
-            #
-            # CONFIRM_CANCEL=False
-            # -> không gửi thay đổi hủy.
-            #
-            # CONFIRM_CANCEL=True
-            # -> gọi lại đúng f().
-            # =================================================
+                cancelled_ids = cancel_full_classes(
+                    page,
+                    CLASS_IDS
+                )
 
-            if cancelled_ids:
+                if cancelled_ids:
 
-                if CONFIRM_CANCEL:
+                    if CONFIRM_CANCEL:
 
-                    print()
-                    print(
-                        "CONFIRM_CANCEL = True"
-                    )
+                        print()
+                        print(
+                            "CONFIRM_CANCEL = True"
+                        )
 
-                    print(
-                        "Gọi f() để gửi thay đổi hủy..."
-                    )
+                        print(
+                            "Gọi f() để gửi thay đổi hủy..."
+                        )
 
-                    f(
-                        page
-                    )
+                        f(
+                            page
+                        )
 
-                else:
+                        wait_hust_ready(
+                            page
+                        )
 
-                    print()
-                    print(
-                        "CONFIRM_CANCEL = False"
-                    )
+                    else:
 
-                    print(
-                        "Không gọi f() cho phần hủy."
-                    )
+                        print()
+                        print(
+                            "CONFIRM_CANCEL = False"
+                        )
+
+                        print(
+                            "Không gọi f() cho phần hủy."
+                        )
 
             print()
             print(
