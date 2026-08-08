@@ -18,7 +18,8 @@ python -m playwright --version
 Nếu hiện phiên bản Playwright thì đã cài thành công.
 
 -----------
-3. Tạo auth.json
+3. Tạo auth.json để lưu phiên bản đăng nhập (Nên để ý và tạo lại sau một thời gian)
+
 Chạy:
 
 python -m playwright codegen --target python --save-storage=auth.json https://qldt.hust.edu.vn/students
