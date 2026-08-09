@@ -45,11 +45,11 @@ REGISTER_URL = (
 SEND_MARKER = ""
 
 PLAN = [
-    "175404",
+    "767597",
+#    "",
+    "767516",
     "",
-    "175405",
-    "",
-    "175406",
+    "767658",
 #    "",
 #    "",
 #    "",
@@ -75,6 +75,22 @@ PLAN = [
 
 ]
 
+
+
+# =========================================================
+# KIỂM TRA AUTH.JSON
+# =========================================================
+#
+# True:
+# Kiểm tra auth.json trước khi đăng ký.
+# Nếu hết hạn thì tự đăng nhập / tạo lại auth.json.
+#
+# False:
+# Bỏ qua bước kiểm tra auth.json.
+# Dùng trực tiếp auth.json hiện có để vào trang đăng ký nhanh hơn.
+# =========================================================
+
+VERIFY_AUTH = True
 
 # =========================================================
 # HẾT CHỖ THÌ HỦY
@@ -110,7 +126,7 @@ CONFIRM_CANCEL = CANCEL_IF_FULL
 # 2 = đăng ký hết vòng rồi mới hủy
 # =========================================================
 
-CANCEL_MODE = 1
+CANCEL_MODE = 2
 
 
 # =========================================================
@@ -120,7 +136,7 @@ CANCEL_MODE = 1
 RETRY_LOOP = True
 
 # Tổng số vòng tối đa, tính cả vòng đầu tiên
-LOOP_LIMIT = 3
+LOOP_LIMIT = 4
 
 
 # Nghỉ giữa các vòng retry, đơn vị giây

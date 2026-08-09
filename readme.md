@@ -27,7 +27,13 @@ EMAIL = "YOUR_HUST_EMAIL" - Điền email đăng nhập
 PASSWORD = "YOUR_PASSWORD" - Điền mật khẩu đăng nhập
 
 Chạy 
-python auth_manager.py --force --headed        (ép buộc tạo auth.json)
+python auth_manager.py              (thủ công tạo auth.json)
+
+python auth_manager.py --force      (ép buộc tạo auth.json)
+
+//có thể thêm --head để xem nó chạy như nào
+
+python auth_
 
 Khi chạy register.py thì auth.json luôn được tự động tạo
 

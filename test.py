@@ -21,6 +21,7 @@ from config import (
     RETRY_DELAY,
     RETRY_FAILED_ONLY,
     STOP_ON_FIRST_SUCCESS,
+    VERIFY_AUTH,
     SHOW_SUMMARY,
     SAVE_LOG,
     LOG_FILE,
@@ -829,20 +830,20 @@ def main():
 
     class_ids = flatten(base_groups)
 
-    # =====================================================
-    # AUTH - TỰ KIỂM TRA / TỰ TẠO LẠI auth.json NẾU HẾT HẠN
-    # =====================================================
+  # =====================================================
+  # AUTH - TỰ KIỂM TRA / TỰ TẠO LẠI auth.json NẾU HẾT HẠN
+  # =====================================================
     try:
-        print()
-        print("========== KIỂM TRA ĐĂNG NHẬP ==========")
+        if VERIFY_AUTH:
+            print()
+            print("========== KIỂM TRA ĐĂNG NHẬP ==========")
 
-        # ensure_auth() thuộc auth_manager.py:
-        # - auth.json còn hiệu lực -> dùng luôn
-        # - auth.json thiếu / hết hiệu lực -> tự đăng nhập
-        #   Microsoft/HUST và tạo auth.json mới
-        auth = ensure_auth(headless=HEADLESS)
+            auth = ensure_auth(headless=HEADLESS)
 
-        print(f"[AUTH] Sẵn sàng dùng: {auth}")
+            print(f"[AUTH] Sẵn sàng dùng: {auth}")
+
+        else:
+            auth = "auth.json"
 
     except Exception as error:
         print()
