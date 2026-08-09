@@ -45,10 +45,34 @@ REGISTER_URL = (
 SEND_MARKER = ""
 
 PLAN = [
-    "767562",
-    "767516",
+    "175404",
     "",
-    "767658",
+    "175405",
+    "",
+    "175406",
+#    "",
+#    "",
+#    "",
+#    "",
+#    "",
+#    "",
+#    "",
+#    "",
+#    "",
+#    "",
+#    "",
+#    "",
+#    "",
+#    "",
+#    "",
+#    "",
+#    "",
+#    "",
+#    "",
+#    "",
+#    "",
+
+
 ]
 
 
@@ -96,10 +120,11 @@ CANCEL_MODE = 1
 RETRY_LOOP = True
 
 # Tổng số vòng tối đa, tính cả vòng đầu tiên
-LOOP_LIMIT = 2
+LOOP_LIMIT = 3
+
 
 # Nghỉ giữa các vòng retry, đơn vị giây
-RETRY_DELAY = 1
+RETRY_DELAY = 10
 
 # True:
 #   THÀNH CÔNG         -> loại
@@ -111,6 +136,21 @@ RETRY_DELAY = 1
 #   chỉ retry lớp Hết chỗ đã hủy
 RETRY_FAILED_ONLY = True
 
+# =========================================================
+# DỪNG KHI CÓ 1 LỚP THÀNH CÔNG
+# =========================================================
+#
+# False:
+#   chạy bình thường như hiện tại.
+#
+# True:
+#   chỉ cần 1 mã lớp có trạng thái THÀNH CÔNG
+#   -> dừng toàn bộ quá trình ngay.
+#   -> không đăng ký tiếp các nhóm còn lại.
+#   -> không retry tiếp.
+# =========================================================
+
+STOP_ON_FIRST_SUCCESS = True
 
 # =========================================================
 # KẾT QUẢ / LOG

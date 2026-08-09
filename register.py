@@ -19,6 +19,7 @@ from config import (
     LOOP_LIMIT,
     RETRY_DELAY,
     RETRY_FAILED_ONLY,
+    STOP_ON_FIRST_SUCCESS,
     SHOW_SUMMARY,
     SAVE_LOG,
     LOG_FILE,
@@ -674,6 +675,31 @@ def run_round(
         round_status.update(statuses)
         last_status.update(statuses)
 
+        # Nếu bật chế độ dừng khi có 1 lớp thành công,
+        # dừng ngay sau khi đọc thấy THÀNH CÔNG.
+        if (
+            STOP_ON_FIRST_SUCCESS
+            and "THÀNH CÔNG" in statuses.values()
+        ):
+            success_id = next(
+                class_id
+                for class_id, status in statuses.items()
+                if status == "THÀNH CÔNG"
+            )
+
+            print()
+            print(
+                f"{success_id} đã THÀNH CÔNG "
+                "-> dừng toàn bộ quá trình."
+            )
+
+            log(
+                "STOP ON FIRST SUCCESS: "
+                + success_id
+            )
+
+            return [], True
+
         # Mode 1: hủy ngay sau lần gửi hiện tại.
         if CANCEL_IF_FULL and CANCEL_MODE == 1:
             cancelled = cancel_full(page, group)
@@ -711,7 +737,7 @@ def run_round(
     if not CANCEL_IF_FULL:
         retry_ids = []
 
-    return list(dict.fromkeys(retry_ids))
+    return list(dict.fromkeys(retry_ids)), False
 
 
 # =========================================================
@@ -868,13 +894,16 @@ def main():
                     f"========== VÒNG {round_number} =========="
                 )
 
-                retry = run_round(
+                retry, stop_success = run_round(
                     page,
                     base_groups,
                     pending,
                     attempts,
                     last_status,
                 )
+
+                if stop_success:
+                    break
 
                 if not RETRY_LOOP:
                     break

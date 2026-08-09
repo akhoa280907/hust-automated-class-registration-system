@@ -18,13 +18,18 @@ python -m playwright --version
 Nếu hiện phiên bản Playwright thì đã cài thành công.
 
 -----------
-3. Tạo auth.json để lưu phiên bản đăng nhập (Nên để ý và tạo lại sau một thời gian)
+3.Thêm file account.py (Quan trọng)
 
-Chạy:
+File cần có 2 nội dung:
 
-python -m playwright codegen --target python --save-storage=auth.json https://qldt.hust.edu.vn/students
+EMAIL = "YOUR_HUST_EMAIL" - Điền email đăng nhập
 
-Đăng nhập xong thì tắt cửa sổ
+PASSWORD = "YOUR_PASSWORD" - Điền mật khẩu đăng nhập
+
+Chạy 
+python auth_manager.py --force --headed        (ép buộc tạo auth.json)
+
+Khi chạy register.py thì auth.json luôn được tự động tạo
 
 ----------
 
@@ -37,11 +42,17 @@ CONFIRM_CANCEL là có huỷ lớp hết chỗ sau khi đăng khí hay không
 
 Chạy file Python mong muốn bằng:
 
+File chính (Khi chạy auth.json sẽ được tự động kiểm tra và tạo):
+
+python register.py (Tự do chọn vị trí gửi đăng kí)
+
+Các file phụ (Nếu auth.json hết hạn thì phải tạo lại)
+
 python r1.py (Đăng kí hết mã lớp đã chọn rồi mới gửi đăng kí)
 
 python r1c.py (Đăng kí hết mã lớp đã chọn rồi mới gửi đăng kí và huỷ các lớp hết chỗ sau khi hoàn thành gửi đăng kí toàn bộ)
 
-python r2.c (Mỗi lần đăng kí mã lớp là 1 lần gửi đăng kí)
+python r2.py (Mỗi lần đăng kí mã lớp là 1 lần gửi đăng kí)
 
 python r2c.py (Mỗi lần đăng kí mã lớp là 1 lần gửi đăng kí và huỷ hết lớp hết chỗ sau khi hoàn thành gửi đăng kí toàn bộ)
 

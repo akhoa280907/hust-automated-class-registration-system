@@ -1,0 +1,138 @@
+[2026-08-09 08:15:00] ==================================================
+[2026-08-09 08:15:00] START register.py
+[2026-08-09 08:15:04] ERROR: Locator expected to be visible
+Actual value: None
+Error: element(s) not found 
+Call log:
+  - Expect "to_be_visible" with timeout 30000ms
+  - waiting for get_by_role("searchbox", name="Mã lớp, mã học phần")
+  - Target page, context or browser has been closed
+
+Aria snapshot:
+- region "Notifications Alt+T"
+- banner:
+  - link "ĐẠI HỌC BÁCH KHOA HÀ NỘI":
+    - /url: /students
+    - img "ĐẠI HỌC BÁCH KHOA HÀ NỘI"
+  - radiogroup "segmented control":
+    - radio "en"
+    - text: en
+    - radio "vi" [checked]
+    - text: vi
+  - link "Trang chủ":
+    - /url: /students
+  - link "Tin tức mới nhất":
+    - /url: /students/news
+  - link "Thành tựu Bách khoa":
+    - /url: /students/honor
+  - link "Sự kiện nổi bật":
+    - /url: /students/events
+  - link "Câu hỏi thường gặp":
+    - /url: /students/faq
+  - button "Đăng nhập"
+- main:
+  - img "banner"
+  - heading "Săn học bổng hàng đầu cùng HUST" [level=2]
+  - paragraph: Với mục tiêu phát triển nền giáo dục chất lượng cao, HUST đã chính thức triển khai hàng trăm gói học bổng giá trị lớn đi cùng các hỗ trợ tài chính hấp dẫn.
+  - link "Khám phá ngay hôm nay":
+    - /url: /students/scholarship
+  - img "HỌC BỔNG THE BEST OF MB CHASING 2026"
+  - text: HỌC BỔNG THE BEST OF MB CHASING 2026
+  - img
+  - text: Học bổng Doanh nghiệp
+  - img
+  - text: "Hạn nộp: 14/08/2026"
+  - img "HỌC BỔNG TOÀN PHẦN KHÓA HỌC “ENGLISH FOR TECH PIONEERS - TIẾNG ANH CHO THẾ HỆ TIÊN PHONG CÔNG NGHỆ”"
+  - text: HỌC BỔNG TOÀN PHẦN KHÓA HỌC “ENGLISH FOR TECH PIONEERS - TIẾNG ANH CHO THẾ HỆ TIÊN PHONG CÔNG NGHỆ”
+  - img
+  - text: Học bổng Doanh nghiệp
+  - img
+  - text: "Hạn nộp: 16/08/2026"
+  - img
+  - text: 12.000.000đ/ suất
+  - img "Học bổng Qorvo PKG năm 2026"
+  - text: Học bổng Qorvo PKG năm 2026
+  - img
+  - text: Học bổng Doanh nghiệp
+  - img
+  - text: "Hạn nộp: 21/08/2026"
+  - img
+  - text: 15.000.000
+  - img "Học bổng SEKISHO – ĐHBK Hà Nội năm 2026"
+  - text: Học bổng SEKISHO – ĐHBK Hà Nội năm 2026
+  - img
+  - text: Học bổng Doanh nghiệp
+  - img
+  - text: "Hạn nộp: 31/10/2026"
+  - img
+  - text: 10.000.000
+  - heading "Q&A" [level=2]
+  - heading "Góc giải đáp những thắc mắc và câu hỏi thường gặp" [level=2]
+  - text: Không có dữ liệu...
+- contentinfo:
+  - img "ĐẠI HỌC BÁCH KHOA HÀ NỘI"
+  - separator
+  - text: ĐẠI HỌC BÁCH KHOA HÀ NỘI vp@hust.edu.vn 024 3869 6099 Số 1 Đại Cồ Việt, Hai Bà Trưng, Hà Nội Liên kết nhanh
+  - link "Trang chủ":
+    - /url: /students
+  - link "Liên hệ":
+    - /url: https://docs.google.com/forms/d/e/1FAIpQLSf6b1ELFbQ1NxuVToSIyvTC5QydRLMLNF8YoX0fq_L47iqL6A/viewform?usp=send_form
+  - link "Hỏi - Đáp":
+    - /url: /students/faq
+  - link "Phản hồi - Đóng góp ý kiến":
+    - /url: https://forms.gle/44UFUzLL68TRGQCUA
+  - text: Cài ứng dụng
+  - link "ch-pay":
+    - /url: https://play.google.com/store/apps/details?id=uni.hust.ehust
+    - img "ch-pay"
+  - link "app-store":
+    - /url: https://apps.apple.com/vn/app/ehust/id1579017744
+    - img "app-store"
+  - text: Copyright © 2024 HANOI UNIVERSITY OF SCIENCE AND TECHNOLOGY. All rights reserved
+  - link "Connect with us on FACEBOOK":
+    - /url: https://www.facebook.com/dhbkhanoi
+  - link "Connect with us on TWITTER":
+    - /url: https://x.com/DHBKHN_HUST
+  - link "Connect with us on YOUTUBE":
+    - /url: https://www.youtube.com/channel/UCl17km6Ou3av5LClGz_FWIw
+- alert
+- dialog:
+  - img "exclamation-circle"
+  - text: Bạn chưa đăng nhập Đang đăng nhập, vui lòng chờ...
+  - img
+[2026-08-09 08:15:23] AUTH ERROR: Page.goto: net::ERR_ABORTED at https://e.hust.edu.vn/sso/login
+Call log:
+  - navigating to "https://e.hust.edu.vn/sso/login", waiting until "domcontentloaded"
+
+[2026-08-09 08:17:09] AUTH ERROR: Target page, context or browser has been closed
+=========================== logs ===========================
+waiting for navigation to "re.compile('^https://sso\\.hust\\.edu\\.vn/adfs/ls/.*', re.IGNORECASE)" until 'domcontentloaded'
+============================================================
+[2026-08-09 08:22:32] ==================================================
+[2026-08-09 08:22:32] START register.py
+[2026-08-09 08:22:42] ATTEMPT 175404: 1
+[2026-08-09 08:22:59] SELECT 175404
+[2026-08-09 08:23:01] ERROR: Locator.click: Target page, context or browser has been closed
+Call log:
+  - waiting for get_by_role("button", name="arrow-right")
+    - locator resolved to <button type="button" class="ant-btn css-dev-only-do-not-override-1ihw13j ant-btn-round ant-btn-primary ant-btn-color-primary ant-btn-variant-solid ant-btn-lg base-button baseButton-module__round___SNt5I text-lg">…</button>
+  - attempting click action
+    2 × waiting for element to be visible, enabled and stable
+      - element is visible, enabled and stable
+      - scrolling into view if needed
+      - done scrolling
+      - <div tabindex="-1" class="ant-modal-wrap ant-modal-confirm-centered ant-modal-centered">…</div> from <div>…</div> subtree intercepts pointer events
+    - retrying click action
+    - waiting 20ms
+    2 × waiting for element to be visible, enabled and stable
+      - element is not stable
+    - retrying click action
+      - waiting 100ms
+    4 × waiting for element to be visible, enabled and stable
+      - element is visible, enabled and stable
+      - scrolling into view if needed
+      - done scrolling
+      - <div tabindex="-1" class="ant-modal-wrap ant-modal-confirm-centered ant-modal-centered">…</div> from <div>…</div> subtree intercepts pointer events
+    - retrying click action
+      - waiting 500ms
+
